@@ -22,10 +22,9 @@ android {
             keyPassword "android"
         }
         release {
-            // Use debug signing for release builds (for development/testing)
-            storeFile file("${System.getProperty('user.home')}/.android/debug.keystore")
+            storeFile file("${System.getenv('KEYSTORE_PATH_RELEASE')}")
             storePassword "android"
-            keyAlias "androiddebugkey"
+            keyAlias "androidreleasekey"
             keyPassword "android"
         }
     }
