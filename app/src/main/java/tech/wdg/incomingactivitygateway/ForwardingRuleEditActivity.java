@@ -903,7 +903,7 @@ public class ForwardingRuleEditActivity extends AppCompatActivity {
                 // Use the new operator settings for SIM name
                 String simName = OperatorSettingsActivity.getSimName(this, 0); // Use first SIM for testing
                 payload = tempConfig.prepareMessage(
-                        "123456789", "test message", simName, System.currentTimeMillis());
+                        "123456789", "test message", simName, "Test Contact", System.currentTimeMillis());
             }
 
             Request request = new Request(tempConfig.getUrl(), payload);

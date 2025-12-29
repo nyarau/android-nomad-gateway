@@ -190,10 +190,14 @@ public class CallBroadcastReceiver extends BroadcastReceiver {
 
             String selection = CallLog.Calls.TYPE + " = ?";
             String[] selectionArgs = { String.valueOf(CallLog.Calls.INCOMING_TYPE) };
-            String sortOrder = CallLog.Calls.DATE + " DESC LIMIT 1";
+            String sortOrder = CallLog.Calls.DATE + " DESC";
+
+            android.net.Uri uri = CallLog.Calls.CONTENT_URI.buildUpon()
+                    .appendQueryParameter("limit", "1")
+                    .build();
 
             Cursor cursor = context.getContentResolver().query(
-                    CallLog.Calls.CONTENT_URI,
+                    uri,
                     projection,
                     selection,
                     selectionArgs,
