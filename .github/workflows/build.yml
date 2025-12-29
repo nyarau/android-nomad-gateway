@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v6
         id: checkout
       
-      - name: Build SampleApplication
+      - name: Gradle Build
         env:
           KEYSTORE_PATH_RELEASE: ${{ runner.temp }}/keystore/release.jks
         run: ./gradlew --no-daemon clean assembleRelease
