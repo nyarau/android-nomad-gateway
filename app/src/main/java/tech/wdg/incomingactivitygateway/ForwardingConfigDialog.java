@@ -305,7 +305,7 @@ public class ForwardingConfigDialog {
                         "+1234567890", "Test Contact", simName, System.currentTimeMillis());
             } else {
                 payload = config.prepareEnhancedMessage(
-                        "123456789", "test message", simName, System.currentTimeMillis());
+                        "123456789", "test message", simName, "Test Contact", System.currentTimeMillis());
             }
 
             Request request = new Request(config.getUrl(), payload);

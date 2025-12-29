@@ -3,8 +3,11 @@ package tech.wdg.incomingactivitygateway;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.telephony.SmsMessage;
+import android.util.Log;
 
 import androidx.work.BackoffPolicy;
 import androidx.work.Constraints;
@@ -96,8 +99,10 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
     protected void callWebHook(ForwardingConfig config, String sender, String slotName,
             String content, long timeStamp) {
 
+        String contactName = getContactName(sender);
+
         // Use enhanced message preparation if enabled, otherwise use regular template
-        String message = config.prepareEnhancedMessage(sender, content, slotName, timeStamp);
+        String message = config.prepareEnhancedMessage(sender, content, slotName, contactName, timeStamp);
 
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -198,5 +203,30 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
             }
         }
         return false;
+    }
+
+    private String getContactName(String phoneNumber) {
+        try {
+            String[] projection = { ContactsContract.PhoneLookup.DISPLAY_NAME };
+            String selection = ContactsContract.PhoneLookup.NUMBER + " = ?";
+            String[] selectionArgs = { phoneNumber };
+
+            Cursor cursor = context.getContentResolver().query(
+                    ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
+                            .appendPath(phoneNumber).build(),
+                    projection, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME));
+                cursor.close();
+                return name;
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Log.e("SmsBroadcastReceiver", "Error getting contact name: " + e.getMessage());
+        }
+        return null;
     }
 }

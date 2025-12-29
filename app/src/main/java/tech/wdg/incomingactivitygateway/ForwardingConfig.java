@@ -414,7 +414,7 @@ public class ForwardingConfig {
 		}
 	}
 
-    public String prepareMessage(String from, String text, String sim, long timeStamp) {
+    public String prepareMessage(String from, String text, String sim, String contactName, long timeStamp) {
 		try {
 			String templateStr = this.getJsonTemplate();
 			JSONObject templateObj = new JSONObject(templateStr);
@@ -423,6 +423,7 @@ public class ForwardingConfig {
 			replacements.put("%from%", from);
 			replacements.put("%text%", text);
 			replacements.put("%sim%", sim);
+			replacements.put("%contact%", contactName != null ? contactName : "Unknown");
 			replacements.put("%sentStamp%", String.valueOf(timeStamp));
 			replacements.put("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
 
@@ -436,7 +437,7 @@ public class ForwardingConfig {
     /**
      * Enhanced SMS message preparation with optional device information
      */
-    public String prepareEnhancedMessage(String from, String text, String sim, long timeStamp) {
+    public String prepareEnhancedMessage(String from, String text, String sim, String contactName, long timeStamp) {
         // Check if enhanced data is enabled for this specific rule
         if (this.enhancedDataEnabled) {
             try {
@@ -451,6 +452,7 @@ public class ForwardingConfig {
                 payload.addData("from", from);
                 payload.addData("text", text);
                 payload.addData("sim", sim);
+                payload.addData("contact", contactName != null ? contactName : "Unknown");
                 payload.addData("sentStamp", timeStamp);
                 payload.addData("receivedStamp", System.currentTimeMillis());
 
@@ -464,7 +466,7 @@ public class ForwardingConfig {
         }
 
         // Fallback to regular template
-        return prepareMessage(from, text, sim, timeStamp);
+        return prepareMessage(from, text, sim, contactName, timeStamp);
     }
 
     public String prepareNotificationMessage(String packageName, String title, String content, String fullMessage,
