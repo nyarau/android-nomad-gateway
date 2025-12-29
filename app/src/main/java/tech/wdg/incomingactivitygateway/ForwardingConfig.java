@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -384,16 +385,52 @@ public class ForwardingConfig {
         editor.commit();
     }
 
+	private JSONObject processTemplate(JSONObject templateObj, Map<String, String> replacements) {
+		try {
+			JSONObject result = new JSONObject();
+			Iterator<String> keys = templateObj.keys();
+
+			while (keys.hasNext()) {
+				String key = keys.next();
+				Object value = templateObj.get(key);
+
+				if (value instanceof JSONObject) {
+					result.put(key, processTemplate((JSONObject) value, replacements));
+				} else if (value instanceof String) {
+					String strValue = (String) value;
+					for (Map.Entry<String, String> entry : replacements.entrySet()) {
+						strValue = strValue.replace(entry.getKey(), entry.getValue());
+					}
+                    result.put(key, strValue);
+				} else {
+					result.put(key, value);
+				}
+			}
+
+			return result;
+		} catch (Exception e) {
+			Log.e("ForwardingConfig", "Error processing template", e);
+			return templateObj;
+		}
+	}
+
     public String prepareMessage(String from, String text, String sim, long timeStamp) {
-        String template = this.getJsonTemplate();
+		try {
+			String templateStr = this.getJsonTemplate();
+			JSONObject templateObj = new JSONObject(templateStr);
 
-        template = template.replace("%from%", from);
-        template = template.replace("%text%", text);
-        template = template.replace("%sim%", sim);
-        template = template.replace("%sentStamp%", String.valueOf(timeStamp));
-        template = template.replace("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
+			Map<String, String> replacements = new java.util.HashMap<>();
+			replacements.put("%from%", from);
+			replacements.put("%text%", text);
+			replacements.put("%sim%", sim);
+			replacements.put("%sentStamp%", String.valueOf(timeStamp));
+			replacements.put("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
 
-        return template;
+			return processTemplate(templateObj, replacements).toString();
+		} catch (JSONException e) {
+			Log.e("ForwardingConfig", "Error parsing template in prepareMessage", e);
+			return "";
+		}
     }
 
     /**
@@ -432,19 +469,25 @@ public class ForwardingConfig {
 
     public String prepareNotificationMessage(String packageName, String title, String content, String fullMessage,
             long timeStamp) {
-        String template = this.getJsonTemplate();
+		try {
+			String templateStr = this.getJsonTemplate();
+			JSONObject templateObj = new JSONObject(templateStr);
 
-        // Replace notification-specific template variables
-        template = template.replace("%from%", packageName);
-        template = template.replace("%text%", fullMessage);
-        template = template.replace("%title%", title != null ? title : "");
-        template = template.replace("%content%", content != null ? content : "");
-        template = template.replace("%package%", packageName);
-        template = template.replace("%sentStamp%", String.valueOf(timeStamp));
-        template = template.replace("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
-        template = template.replace("%sim%", "notification"); // For notifications, sim is always "notification"
+			Map<String, String> replacements = new java.util.HashMap<>();
+			replacements.put("%from%", packageName);
+			replacements.put("%text%", fullMessage);
+			replacements.put("%title%", title != null ? title : "");
+			replacements.put("%content%", content != null ? content : "");
+			replacements.put("%package%", packageName);
+			replacements.put("%sentStamp%", String.valueOf(timeStamp));
+			replacements.put("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
+			replacements.put("%sim%", "notification");
 
-        return template;
+			return processTemplate(templateObj, replacements).toString();
+		} catch (JSONException e) {
+			Log.e("ForwardingConfig", "Error parsing template in prepareNotificationMessage", e);
+			return "";
+		}
     }
 
     /**
@@ -486,33 +529,44 @@ public class ForwardingConfig {
     }
 
     public String prepareCallMessage(String phoneNumber, String contactName, long timeStamp) {
-        String template = this.getJsonTemplate();
+		try {
+			String templateStr = this.getJsonTemplate();
+			JSONObject templateObj = new JSONObject(templateStr);
 
-        // Replace call-specific template variables
-        template = template.replace("%from%", phoneNumber);
-        template = template.replace("%contact%", contactName != null ? contactName : "Unknown");
-        template = template.replace("%timestamp%", String.valueOf(timeStamp));
-        template = template.replace("%duration%", "0"); // Duration is 0 for incoming calls
-        template = template.replace("%sentStamp%", String.valueOf(timeStamp));
-        template = template.replace("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
+			Map<String, String> replacements = new java.util.HashMap<>();
+			replacements.put("%from%", phoneNumber);
+			replacements.put("%contact%", contactName != null ? contactName : "Unknown");
+			replacements.put("%timestamp%", String.valueOf(timeStamp));
+			replacements.put("%duration%", "0");
+			replacements.put("%sentStamp%", String.valueOf(timeStamp));
+			replacements.put("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
 
-        return template;
+			return processTemplate(templateObj, replacements).toString();
+		} catch (JSONException e) {
+			Log.e("ForwardingConfig", "Error parsing template in prepareCallMessage", e);
+			return "";
+		}
     }
 
-    // New overloaded method with SIM name
     public String prepareCallMessage(String phoneNumber, String contactName, String simName, long timeStamp) {
-        String template = this.getJsonTemplate();
+		try {
+			String templateStr = this.getJsonTemplate();
+			JSONObject templateObj = new JSONObject(templateStr);
 
-        // Replace call-specific template variables
-        template = template.replace("%from%", phoneNumber);
-        template = template.replace("%contact%", contactName != null ? contactName : "Unknown");
-        template = template.replace("%timestamp%", String.valueOf(timeStamp));
-        template = template.replace("%duration%", "0"); // Duration is 0 for incoming calls
-        template = template.replace("%sentStamp%", String.valueOf(timeStamp));
-        template = template.replace("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
-        template = template.replace("%sim%", simName != null ? simName : "undetected");
+			Map<String, String> replacements = new java.util.HashMap<>();
+			replacements.put("%from%", phoneNumber);
+			replacements.put("%contact%", contactName != null ? contactName : "Unknown");
+			replacements.put("%timestamp%", String.valueOf(timeStamp));
+			replacements.put("%duration%", "0");
+			replacements.put("%sentStamp%", String.valueOf(timeStamp));
+			replacements.put("%receivedStamp%", String.valueOf(System.currentTimeMillis()));
+			replacements.put("%sim%", simName != null ? simName : "undetected");
 
-        return template;
+			return processTemplate(templateObj, replacements).toString();
+		} catch (JSONException e) {
+			Log.e("ForwardingConfig", "Error parsing template in prepareCallMessage", e);
+			return "";
+		}
     }
 
     /**
