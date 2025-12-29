@@ -1,3 +1,12 @@
+### This fork
+- Add Github Action to build and release APK
+  - Set Repository secrets `KEYSTORE` to output of `openssl base64 < /path/to/your/keystore | tr -d '\n'`
+- Accept CA certificates added by user
+- Add QUERY_ALL_PACKAGES permission to allow listing all installed apps
+- Correctly serialize JSON template to prevent from producing invalid JSON
+
+---
+
 # Incoming SMS, Calls & Notifications Gateway
 
 This is a free, open-source Android app that automatically forwards incoming SMS messages, phone calls, and push notifications to specified URLs as JSON via HTTP POST.
