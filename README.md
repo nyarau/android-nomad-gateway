@@ -2,8 +2,27 @@
 - Add Github Action to build and release APK
   - Set Repository secrets `KEYSTORE` to output of `openssl base64 < /path/to/your/keystore | tr -d '\n'`
 - Accept CA certificates added by user
-- Add QUERY_ALL_PACKAGES permission to allow listing all installed apps
+- Add QUERY_ALL_PACKAGES permission to allow listing all installed apps (Google doesn't like it however)
 - Correctly serialize JSON template to prevent from producing invalid JSON
+- Add `contact` to SMS message (not available as template, only present in "Enhanced Data")
+- Fix syntax error of `getLatestIncomingNumber` in phone call handler
+
+### Outstanding issues
+- Missing fields in default template
+  - `%content%` in push notification
+  - `%receivedStamp%` in SMS message
+- Custom Fields with pure variable are ignored. For example, a custom field with a value of `%sim%` will be ignored but `%sim% - %text%` will be kept.
+- `ForwardingRuleEditActivity.java` is a mess, attempt to fix the previous issues didn't success
+- When "Use Chunked Transfer Encoding" is disabled, `java.net.ProtocolException: expected * bytes but received *`
+- All screens except the main/home screen have too much padding on the top and too little on the bottom, Android navigation bar covers "Test" and "Save" buttons on the bottom
+- "Advanced Options" are missing in "App Webhooks"
+- When "Enhanced Data" is enabled, "JSON Template" should be hidden to avoid confusion
+
+### Whishlist
+- Add battery/charging info to Enhanced Data
+- Allow selecting multiple apps in push notification rules, or
+- Allow copying/cloning existing rule
+- Backup and restore
 
 ---
 
