@@ -63,6 +63,6 @@ jobs:
         with:
           artifacts: "app/build/outputs/apk/release/app-release.apk"
           allowUpdates: true
-          tag: "1.3.0+1"
+          tag: "1.3.0+2"
           commit: "${{ steps.checkout.outputs.commit }}"
           body: "${{ steps.checkout.outputs.commit }}"

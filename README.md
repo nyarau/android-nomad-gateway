@@ -6,6 +6,9 @@
 - Correctly serialize JSON template to prevent from producing invalid JSON
 - Add `contact` to SMS message (not available as template, only present in "Enhanced Data")
 - Fix syntax error of `getLatestIncomingNumber` in phone call handler
+- Fix call handler with code borrowed from [NotifyMe](https://github.com/jinweijie/notify-me/blob/master/app/src/main/java/com/jinweijie/notifyme/CallReceiver.kt)
+  - The old implementation reads the last call from call log on Android 10+, on my Android 15 phone the incoming phone number is always stuck with an old entry. However NotifyMe works flawlessly on my phone, thus I merged the code from NotifyMe and gave it priority while preserving existing code.
+  - Revert to `1.3.0+1` APK if this doesn't work for you. The version number of the APK in releases page was not bumped, you should be able to try different versions by "updating" the app without uninstalling or losing your existing config.
 
 ### Outstanding issues
 - Missing fields in default template

@@ -1,5 +1,6 @@
 package tech.wdg.incomingactivitygateway;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +8,7 @@ import android.database.Cursor;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
+import android.telephony.SubscriptionManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.os.Build;
@@ -21,6 +23,7 @@ import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CallBroadcastReceiver extends BroadcastReceiver {
@@ -36,8 +39,29 @@ public class CallBroadcastReceiver extends BroadcastReceiver {
         if (action == null) {
             return;
         }
+        if ("android.intent.action.PHONE_STATE".equals(action)) {
+            String stateStr = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
+            String incomingNumber = null;
 
-        if (TelephonyManager.ACTION_PHONE_STATE_CHANGED.equals(action)) {
+            int subId = intent.getIntExtra("subscription", -1);
+            int simSlotIndex = getSimSlotIndex(context, subId);
+
+            boolean isDualSim = isDualSimDevice(context);
+
+            if (TelephonyManager.EXTRA_STATE_RINGING.equals(stateStr)) {
+                incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+
+                if (incomingNumber != null && !incomingNumber.isEmpty()) {
+                    String prefix = isDualSim ? "SIM " + simSlotIndex + ": " : "";
+                    String displayMessage = prefix + incomingNumber;
+
+                    Log.d(TAG, "Incoming call from " + displayMessage);
+                    handleIncomingCall(incomingNumber, simSlotIndex);
+                } else {
+                    Log.d(TAG, "Incoming call number is null or empty.");
+                }
+            }
+        } else if (TelephonyManager.ACTION_PHONE_STATE_CHANGED.equals(action)) {
             String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
             Bundle bundle = intent.getExtras();
 
@@ -269,5 +293,44 @@ public class CallBroadcastReceiver extends BroadcastReceiver {
         }
 
         return slotId;
+    }
+    @SuppressLint("MissingPermission")
+    private static int getSimSlotIndex(Context context, int subId) {
+        if (context == null || subId == -1) {
+            return -1;
+        }
+        try {
+            SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+            if (subscriptionManager != null) {
+                android.telephony.SubscriptionInfo subscriptionInfo = subscriptionManager.getActiveSubscriptionInfo(subId);
+                if (subscriptionInfo != null) {
+                    return subscriptionInfo.getSimSlotIndex();
+                }
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "Permission denied for subscription info", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting SIM slot index", e);
+        }
+        return -1;
+    }
+
+    @SuppressLint("MissingPermission")
+    private static boolean isDualSimDevice(Context context) {
+        if (context == null) {
+            return false;
+        }
+        try {
+            SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+            if (subscriptionManager != null) {
+                List<android.telephony.SubscriptionInfo> activeSubscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+                return activeSubscriptionInfoList != null && activeSubscriptionInfoList.size() > 1;
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "Permission denied for subscription info", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking dual SIM device", e);
+        }
+        return false;
     }
 }
